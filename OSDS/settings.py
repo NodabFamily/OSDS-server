@@ -58,6 +58,7 @@ DJANGO_APPS = [
 PROJECTS_APPS = [
     'accounts',
     'archives',
+    'notifications',
 
 ]
 
