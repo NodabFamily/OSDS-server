@@ -58,7 +58,7 @@ DJANGO_APPS = [
 PROJECTS_APPS = [
     'accounts',
     'archives',
-    'messages',
+
 ]
 
 THIRD_PARTY_APPS = [
