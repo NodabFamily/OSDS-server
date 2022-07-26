@@ -23,7 +23,7 @@ def create_album(request, family_id):
             "id": new_album.id,
             "title": new_album.title,
             "family_id": new_album.family_id.id,
-            "cover_image": new_album.get_img_url(),
+            "cover_image": new_album.cover_image.url,
             "created_at": new_album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
             "updated_at": new_album.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
 
