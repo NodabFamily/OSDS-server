@@ -2,7 +2,6 @@ import json
 
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
-
 from accounts.models import Family
 from .models import Album
 # Create your views here.
@@ -22,11 +21,11 @@ def create_album(request, family_id):
 
         new_album_json = {
             "id": new_album.id,
-            "family_id": new_album.family_id,
             "title": new_album.title,
-            "cover_image": new_album.cover_image,
-            "created_at": new_album.created_at,
-            "updated_at": new_album.updated_at,
+            "family_id": new_album.family_id.id,
+            "cover_image": new_album.get_img_url(),
+            "created_at": new_album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
+            "updated_at": new_album.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
 
         }
         json_res = json.dumps(
@@ -42,6 +41,7 @@ def create_album(request, family_id):
         return HttpResponse(
             json_res,
             content_type=u"application/json; charset=utf-8",
+            status=200
         )
 
     return JsonResponse({
