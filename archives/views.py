@@ -74,10 +74,11 @@ def create_read_all_album(request, family_id):
                 "created_at" : album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
                 "updated_at" : album.updated_at.strftime("%m/%d/%Y, %H:%M:%S")
             }
+            print(album_json)
             album_json_all.append(album_json)
             like_count = 0
             comment_count = 0
-
+        print(album_json_all)
         json_res = json.dumps(
             {
                 "status": 200,
@@ -93,3 +94,54 @@ def create_read_all_album(request, family_id):
             content_type=u"application/json; charset=utf-8",
             status=200
         )
+
+
+@require_http_methods(['GET', 'PUT', 'PATCH', 'DELETE'])
+def read_edit_delete_album(request, family_id, album_id):
+    if request.method == "GET":
+        # 변수 초기화
+        like_count = 0
+        comment_count = 0
+        photo_json_all = []
+
+        user = family_id
+
+        photo_all = Photo.objects.filter(album_id=album_id)
+        for photo in photo_all:
+            like_count = photo.like_set.all().count()
+            comment_count = photo.comment_set.all().count()
+
+            photo_json = {
+                "id" : photo.id,
+                "album_id" : photo.album_id.id,
+                "family_id" : photo.family_id.id,
+                "photo_image" : photo.photo_image.url,
+                "like_count" : like_count,
+                "comment_count" : comment_count,
+                "created_at" : photo.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
+                "updated_at" : photo.updated_at.strftime("%m/%d/%Y, %H:%M:%S")
+            }
+            photo_json_all.append(photo_json)
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "생성 성공!",
+                "data": photo_json_all
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+    elif request.method == "PUT":
+        pass
+    elif request.method == "PATCH":
+        pass
+    elif request.method == "DELETE":
+        pass
