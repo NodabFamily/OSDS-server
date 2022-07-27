@@ -59,6 +59,7 @@ PROJECTS_APPS = [
     'accounts',
     'archives',
     'notifications',
+    'families',
 
 ]
 

@@ -1,6 +1,6 @@
 from django.db import models
 
-from accounts.models.family import Family
+from families.models import Family
 from archives.models.album import Album
 
 
