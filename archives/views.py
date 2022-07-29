@@ -13,7 +13,8 @@ def create_read_all_album(request, family_id):
     if request.method == "POST":
 
         body = request.POST
-        img = request.FILES['album_image']
+        img = request.FILES.get('cover_image')
+        album_img = request.FILES.getlist['album_image']
 
         new_album = Album.objects.create(
             family_id=get_object_or_404(Family, pk=family_id),
@@ -21,11 +22,20 @@ def create_read_all_album(request, family_id):
             cover_image=img
         )
 
+        for image in album_img:
+            photo = Photo.objects.create(
+                album_id=new_album.id,
+                family_id=family_id.id,
+                photo_image=image
+            )
+            photo.save()
+
+
         new_album_json = {
             "id": new_album.id,
             "title": new_album.title,
             "family_id": new_album.family_id.id,
-            "cover_image": new_album.album_image.url,
+            "album_image": new_album.album_image.url,
             "created_at": new_album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
             "updated_at": new_album.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
 
@@ -74,11 +84,9 @@ def create_read_all_album(request, family_id):
                 "created_at" : album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
                 "updated_at" : album.updated_at.strftime("%m/%d/%Y, %H:%M:%S")
             }
-            print(album_json)
             album_json_all.append(album_json)
             like_count = 0
             comment_count = 0
-        print(album_json_all)
         json_res = json.dumps(
             {
                 "status": 200,
@@ -99,12 +107,7 @@ def create_read_all_album(request, family_id):
 @require_http_methods(['GET', 'PUT', 'PATCH', 'DELETE'])
 def read_edit_delete_album(request, family_id, album_id):
     if request.method == "GET":
-        # 변수 초기화
-        like_count = 0
-        comment_count = 0
         photo_json_all = []
-
-        user = family_id
 
         photo_all = Photo.objects.filter(album_id=album_id)
         for photo in photo_all:
@@ -140,8 +143,12 @@ def read_edit_delete_album(request, family_id, album_id):
         )
 
     elif request.method == "PUT":
-        pass
+        # 앨범 타이틀 수정
+        album = Album.objects.get(album_id=album_id)
+
     elif request.method == "PATCH":
+        # 개별 사진 삭제1
         pass
     elif request.method == "DELETE":
+        # 앨범 삭제
         pass
