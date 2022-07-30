@@ -3,7 +3,9 @@ import json
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from families.models import Family
-from .models import Album, Like, Photo
+from .models.comment import Comment
+from .models.photo import Photo
+from .models.album import Album
 
 from django.views.decorators.http import require_http_methods
 # Create your views here.
@@ -87,6 +89,7 @@ def create_read_all_album(request, family_id):
             album_json_all.append(album_json)
             like_count = 0
             comment_count = 0
+
         json_res = json.dumps(
             {
                 "status": 200,
@@ -104,7 +107,7 @@ def create_read_all_album(request, family_id):
         )
 
 
-@require_http_methods(['GET', 'PUT', 'PATCH', 'DELETE'])
+@require_http_methods(['GET', 'PUT', 'DELETE'])
 def read_edit_delete_album(request, family_id, album_id):
     if request.method == "GET":
         photo_json_all = []
@@ -143,12 +146,153 @@ def read_edit_delete_album(request, family_id, album_id):
         )
 
     elif request.method == "PUT":
+        body = json.loads(request.body.decode('utf8'))
         # 앨범 타이틀 수정
-        album = Album.objects.get(album_id=album_id)
+        # album = Album.objects.get(id=album_id)
+        album = get_object_or_404(Album, id=album_id)
 
-    elif request.method == "PATCH":
-        # 개별 사진 삭제1
-        pass
+        new_title = body['title']
+
+        album.title = new_title
+        album.save()
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "수정 성공!",
+                "data": new_title
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+
     elif request.method == "DELETE":
         # 앨범 삭제
-        pass
+        album = Album.objects.get(id=album_id)
+        album.delete()
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "삭제 성공!"
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+@require_http_methods(['DELETE'])
+def delete_photo(request, family_id, album_id, photo_id):
+    if request.method == 'DELETE':
+        photo = get_object_or_404(Photo, pk=photo_id)
+        photo.delete()
+
+    json_res = json.dumps(
+        {
+            "status": 200,
+            "success": True,
+            "message": "삭제 성공!"
+        },
+        ensure_ascii=False
+    )
+
+    return HttpResponse(
+        json_res,
+        content_type=u"application/json; charset=utf-8",
+        status=200
+    )
+
+
+@require_http_methods(['POST'])
+def create_comment(request, family_id, photo_id):
+    if request.method == "POST":
+        body = json.loads(request.body.decode('utf8'))
+        user = request.user
+        print(user)
+        new_comment = Comment.objects.create(
+            photo_id=get_object_or_404(Photo, pk=photo_id),
+            user_id=user.id,
+            comment=body['comment']
+        )
+        new_comment_json = {
+            "id": new_comment.id,
+            "photo_id": new_comment.photo_id.id,
+            "user_id": new_comment.user_id,
+            "comment": new_comment.comment,
+            "created_at": new_comment.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
+            "updated_at": new_comment.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
+        }
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "생성 성공!",
+                "data": new_comment_json
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+@require_http_methods(['PUT', 'DELETE'])
+def edit_delete_comment(request, family_id, photo_id, comment_id):
+    if request.method == "PUT":
+        body = json.loads(request.body.decode('utf8'))
+        comment = get_object_or_404(Comment, pk=comment_id)
+
+        new_comment = body['comment']
+
+        comment.comment = new_comment
+        comment.save()
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "수정 성공!",
+                "data": new_comment
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+    elif request.method == "DELETE":
+        comment = get_object_or_404(Comment, pk=comment_id)
+        comment.delete()
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "삭제 성공!"
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
