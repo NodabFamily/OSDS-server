@@ -106,7 +106,7 @@ def create_read_all_album(request, family_id):
         )
 
 
-@require_http_methods(['GET', 'PUT', 'PATCH', 'DELETE'])
+@require_http_methods(['GET', 'PUT', 'DELETE'])
 def read_edit_delete_album(request, family_id, album_id):
     if request.method == "GET":
         photo_json_all = []
@@ -156,7 +156,7 @@ def read_edit_delete_album(request, family_id, album_id):
             {
                 "status": 200,
                 "success": True,
-                "message": "생성 성공!",
+                "message": "수정 성공!",
                 "data": new_title
             },
             ensure_ascii=False
@@ -181,7 +181,7 @@ def read_edit_delete_album(request, family_id, album_id):
             {
                 "status": 200,
                 "success": True,
-                "message": "생성 성공!"
+                "message": "삭제 성공!"
             },
             ensure_ascii=False
         )
@@ -191,3 +191,26 @@ def read_edit_delete_album(request, family_id, album_id):
             content_type=u"application/json; charset=utf-8",
             status=200
         )
+
+@require_http_methods(['DELETE'])
+def delete_photo(request, family_id, album_id, photo_id):
+    if request.method == 'DELETE':
+        photo = Photo.objects.get(id=photo_id)
+        photo.delete()
+
+    json_res = json.dumps(
+        {
+            "status": 200,
+            "success": True,
+            "message": "삭제 성공!"
+        },
+        ensure_ascii=False
+    )
+
+    return HttpResponse(
+        json_res,
+        content_type=u"application/json; charset=utf-8",
+        status=200
+    )
+
+
