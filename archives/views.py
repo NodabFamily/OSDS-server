@@ -3,7 +3,8 @@ import json
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from families.models import Family
-from .models import Album, Like, Photo
+from .models.photo import Photo
+from .models.album import Album
 
 from django.views.decorators.http import require_http_methods
 # Create your views here.
@@ -87,6 +88,7 @@ def create_read_all_album(request, family_id):
             album_json_all.append(album_json)
             like_count = 0
             comment_count = 0
+
         json_res = json.dumps(
             {
                 "status": 200,
@@ -143,12 +145,49 @@ def read_edit_delete_album(request, family_id, album_id):
         )
 
     elif request.method == "PUT":
+        body = json.loads(request.body.decode('utf8'))
         # 앨범 타이틀 수정
-        album = Album.objects.get(album_id=album_id)
+        # album = Album.objects.get(id=album_id)
+        album = get_object_or_404(Album, id=album_id)
 
-    elif request.method == "PATCH":
-        # 개별 사진 삭제1
-        pass
+        new_title = body['title']
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "생성 성공!",
+                "data": new_title
+            },
+            ensure_ascii=False
+        )
+
+        album.title = new_title
+        album.save()
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+
     elif request.method == "DELETE":
         # 앨범 삭제
-        pass
+        album = Album.objects.get(id=album_id)
+        album.delete()
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "생성 성공!"
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
