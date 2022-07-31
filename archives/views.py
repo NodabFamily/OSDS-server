@@ -1,8 +1,12 @@
 import json
 
+from django.db.models import Prefetch
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
+
+from accounts.models import User
 from families.models import Family
+from .models import Like
 from .models.comment import Comment
 from .models.photo import Photo
 from .models.album import Album
@@ -64,17 +68,18 @@ def create_read_all_album(request, family_id):
         comment_count = 0
 
         user = request.user.family_id
+        user_id = request.user.id
 
-        album_all = Album.objects.filter(family_id=user)
+        album_all = Album.objects.order_by("-id").filter(family_id=user)
         album_json_all = []
 
         for album in album_all:
-            photo_all = Photo.objects.filter(album_id=album.id)
+            photo_all = Photo.objects.order_by("-id").filter(album_id=album.id)
 
             for photo in photo_all:
-
-                like_count += photo.like_set.all().count()
+                like_count += photo.like_count
                 comment_count += photo.comment_set.all().count()
+                my_like = photo.my_likes
 
             album_json = {
                 "id" : album.id,
@@ -111,11 +116,18 @@ def create_read_all_album(request, family_id):
 def read_edit_delete_album(request, family_id, album_id):
     if request.method == "GET":
         photo_json_all = []
-
-        photo_all = Photo.objects.filter(album_id=album_id)
+        user_id = request.user.id
+        print("user_id:", user_id)
+        photo_all = Photo.objects.filter(album_id=album_id).order_by("-id").prefetch_related(Prefetch("like_set", queryset=Like.objects.filter(user_id=user_id), to_attr="my_likes"))
         for photo in photo_all:
             like_count = photo.like_set.all().count()
             comment_count = photo.comment_set.all().count()
+            user_like = photo.my_likes
+
+            if user_like:
+                my_like=1
+            else:
+                my_like=0
 
             photo_json = {
                 "id" : photo.id,
@@ -125,7 +137,8 @@ def read_edit_delete_album(request, family_id, album_id):
                 "like_count" : like_count,
                 "comment_count" : comment_count,
                 "created_at" : photo.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
-                "updated_at" : photo.updated_at.strftime("%m/%d/%Y, %H:%M:%S")
+                "updated_at" : photo.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
+                "my_like" : my_like
             }
             photo_json_all.append(photo_json)
 
@@ -296,3 +309,60 @@ def edit_delete_comment(request, family_id, photo_id, comment_id):
             status=200
         )
 
+
+@require_http_methods(['POST', 'DELETE'])
+def do_undo_like(request, family_id, album_id, photo_id):
+    if request.method == "POST":
+        user = request.user.id
+        photo = get_object_or_404(Photo, pk=photo_id)
+
+        photo.like_count += 1
+        photo.save()
+        photo_like = Like.objects.create(user_id=user, photo_id=photo)
+
+        new_like_json = {
+            "user_id" : user.id,
+            "photo_id" : photo_id,
+            "created_at" : photo_like.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
+        }
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "생성 성공!",
+                "data": new_like_json
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+    elif request.method == "DELETE":
+        user = request.user.id
+        deleted_cnt = Like.objects.filter(user_id=user, photo_id=photo_id)
+        if deleted_cnt:
+            photo = Photo.objects.filter(id=photo_id).get()
+            photo.like_count -= 1
+            photo.save()
+            photo_like = Like.objects.filter(user_id=user, photo_id=photo_id)
+            photo_like.delete()
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "삭제 성공!"
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
