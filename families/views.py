@@ -15,7 +15,6 @@ def create_family(request):
         image = request.FILES.get("cover_image")
         body = request.POST
 
-        request.user = get_object_or_404(User,pk=1) # Anonymous User 대비 임시 코드
         sender = request.user
 
         password = body['password']
@@ -31,7 +30,6 @@ def create_family(request):
             password = decoded_password
         )
 
-    
         sender.is_participant = True
         sender.family_id = new_family
         sender.save()
@@ -106,7 +104,6 @@ def check_validate_family(request,family_id):
     elif request.method == 'PATCH':
         body = json.loads(request.body.decode('utf-8'))
 
-        request.user = get_object_or_404(User, pk=2)  # Anonymous User 대비 임시 코드
         rcvr = request.user
 
         pw_input = body['password']
