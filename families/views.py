@@ -9,13 +9,15 @@ from accounts.models import User
 from .models import Family
 
 # Create your views here.
-@require_http_methods(['POST', 'GET'])
+@require_http_methods(['POST'])
 def create_family(request):
     if request.method == "POST":
         image = request.FILES.get("cover_image")
         body = request.POST
-        # sender = request.user
-        
+
+        request.user = get_object_or_404(User,pk=1) # Anonymous User 대비 임시 코드
+        sender = request.user
+
         password = body['password']
         hashed_password = bcrypt.hashpw(
             password.encode('utf-8'),bcrypt.gensalt()
@@ -30,9 +32,9 @@ def create_family(request):
         )
 
     
-        # sender.is_participant = True
-        # sender.family_id = new_family
-        # sender.save()
+        sender.is_participant = True
+        sender.family_id = new_family
+        sender.save()
 
         new_family_json = {
             "id" : new_family.id,
@@ -54,7 +56,6 @@ def create_family(request):
         ensure_ascii=False
         )
 
-
         return HttpResponse(
             json_res,
             content_type=u"application/json; charset=utf-8",
@@ -62,4 +63,194 @@ def create_family(request):
         )
 
 
-# @require_http_methods(['GET','POST'])
+@require_http_methods(['GET','PATCH'])
+def check_validate_family(request,family_id):
+    # 가입하려는 가족 그롭이 이 가족이 맞는지 보여주는 코드
+    if request.method == 'GET':
+        family = get_object_or_404(Family, pk=family_id)
+        member_json_all = []
+        member_all = User.objects.filter(family_id = family)
+        
+        for member in member_all : 
+            member_json = {
+                "name" : member.name,
+                "nickname" : member.nickname,
+                "bio" : member.bio
+            }
+            member_json_all.append(member_json)
+
+        family_json = {
+            "family_name" : family.family_name,
+            "cover_image" : family.cover_image.url,
+            "bio" : family.bio,
+            "members" : member_json_all
+        }
+        
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "조회 성공",
+                "data": family_json
+            },
+            ensure_ascii=False
+        )
+            
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+    # 입력한 패스워드와 가족 패스워드가 일치한지 확인해서 가입시키는 코드
+    elif request.method == 'PATCH':
+        body = json.loads(request.body.decode('utf-8'))
+
+        request.user = get_object_or_404(User, pk=2)  # Anonymous User 대비 임시 코드
+        rcvr = request.user
+
+        pw_input = body['password']
+        family = get_object_or_404(Family, pk=family_id)
+
+        family_pw = family.password
+
+        if bcrypt.checkpw(pw_input.encode('utf-8'), family_pw.encode('utf-8')) == True:
+            rcvr.family_id = family
+            rcvr.is_participant = True
+            rcvr.save()
+
+            json_res = json.dumps(
+                {
+                "status": 200,
+                "success": True,
+                "message": "생성 성공!",
+                "data": None
+                },
+            ensure_ascii=False
+            )
+            
+            return HttpResponse(
+                json_res,
+                content_type=u"application/json; charset=utf-8",
+                status=200
+            )
+
+        else:
+            json_res = json.dumps(
+                {
+                "status": 400,
+                "success": False,
+                "message": "비밀번호 불일치",
+                "data": None
+                },
+            ensure_ascii=False
+            )
+            
+            return HttpResponse(
+                json_res,
+                content_type=u"application/json; charset=utf-8",
+                status=400
+            )
+
+
+@require_http_methods(['GET','POST','DELETE'])
+def read_update_delete_family(request,family_id):
+    # 가족 정보 조회
+    if request.method == 'GET':
+        family = get_object_or_404(Family, pk=family_id)
+        member_json_all = []
+        member_all = User.objects.filter(family_id = family)
+        
+        for member in member_all : 
+            member_json = {
+                "name" : member.name,
+                "nickname" : member.nickname,
+                "bio" : member.bio
+            }
+            member_json_all.append(member_json)
+
+        family_json = {
+            "family_name" : family.family_name,
+            "cover_image" : family.cover_image.url,
+            "bio"         : family.bio,
+            "members"     : member_json_all
+        }
+        
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "조회 성공",
+                "data": family_json
+            },
+            ensure_ascii=False
+        )
+            
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+    
+    # 가족 정보 수정
+    elif request.method == 'POST':
+        body = request.POST
+        image = request.FILES["cover_image"]
+
+        password = body['password']
+        hashed_password = bcrypt.hashpw(
+            password.encode('utf-8'),bcrypt.gensalt()
+        )
+        decoded_password = hashed_password.decode('utf_8')
+
+        update_family = get_object_or_404(Family, pk=family_id)
+        update_family.family_name = body['family_name']
+        update_family.cover_image = image
+        update_family.bio = body['bio']
+        update_family.password = decoded_password
+        update_family.save()
+
+        update_family_json = {
+            "family_name" : update_family.family_name,
+            "cover_image" : update_family.cover_image.url,
+            "bio"         : update_family.bio,
+            "password"    : update_family.password
+        }
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "수정 성공",
+                "data": update_family_json
+            },
+            ensure_ascii=False
+        )
+            
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+    # 가족 삭제
+    elif request.method == 'DELETE':
+        delete_family = get_object_or_404(Family, pk=family_id)
+        delete_family.delete()
+        
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "삭제 성공",
+                "data": None
+            },
+            ensure_ascii=False
+        )
+            
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
