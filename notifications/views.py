@@ -5,6 +5,7 @@ from django.views.decorators.http import require_http_methods
 from firebase_admin import messaging
 from django.http.response import HttpResponseBadRequest, HttpResponse, HttpResponseServerError
 from .models import Message
+from django.core.serializers import serialize
 
 User = get_user_model()
 
@@ -18,6 +19,34 @@ def message_save(user_id, message_data) -> None:
     )
 
     new_message.save()
+
+
+@require_http_methods("GET")
+def read_messages_all(request, user_id):
+    user = get_object_or_404(User,id=user_id)
+
+    json_response_all = []
+    messages = Message.objects.order_by("-id").filter(user_id=user_id)
+
+    for message in messages:
+        message_json = serialize(message)
+        json_response_all.append(message_json)
+
+    json_res = json.dumps(
+        {
+            "status": 200,
+            "success": True,
+            "message": "생성 성공!",
+            "data": json_response_all
+        },
+        ensure_ascii=False
+    )
+
+    return HttpResponse(
+        json_res,
+        content_type=u"application/json; charset=utf-8mb4",
+        status=200
+    )
 
 
 @require_http_methods("PATCH")
