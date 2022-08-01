@@ -161,3 +161,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
+
+
+import firebase_admin
+from firebase_admin import credentials
+
+cred = credentials.Certificate(os.path.join(BASE_DIR,"serviceAccountKey.json"))
+firebase_admin.initialize_app(cred)
