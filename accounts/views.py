@@ -6,15 +6,12 @@ from django.shortcuts import get_object_or_404
 from .models import User
 from django.views.decorators.http import require_http_methods
 # Create your views here.
-# 내일 해결해야할 것들  : family_id  ,, 사진 불러오고 수정하기 
 @require_http_methods(['POST'])
 def create_user(request):
     if request.method == "POST":
         body = request.POST
         avatar_img = request.FILES['avatar']
-
         new_user =  User.objects.create(
-            #family_id = body["family_id"],
             member_id = body["member_id"],
             password = body["password"],
             name = body["name"],
@@ -27,7 +24,6 @@ def create_user(request):
 
         new_user_json={
             "id"    : new_user.id,
-            #"family_id" : new_user.family_id.id,
             "password" : new_user.password,
             "member_id" : new_user.member_id,
             "name"    : new_user.name,
@@ -39,15 +35,23 @@ def create_user(request):
 
         }
 
-        return JsonResponse({
-                    'status': 200,
-                    'success': True,
-                    'message': '생성 성공!',
-                    'data': new_user_json    
-                })
+        json_res=json.dumps(
+                {
+                'status': 200,
+                'success': True,
+                'message': '생성 성공!',
+                'data': new_user_json    
+                },
+            ensure_ascii=False
+            )
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
 
 
-@require_http_methods(['GET','DELETE','PUT'])
+@require_http_methods(['GET','DELETE','POST'])
 def read_edit_delete_user(request,id):
     if request.method == "GET":
         user_detail = get_object_or_404(User, pk =id)
@@ -62,27 +66,46 @@ def read_edit_delete_user(request,id):
             "nickname"    : user_detail.nickname,
             "is_participant"    : user_detail.is_participant,
         }
-
-        return JsonResponse({
-                'status': 200,
-                'success': True,
-                'message': '수신 성공!',
-                'data': user_detail_json
-            })
+        json_res = json.dumps(
+                {
+                "status": 200,
+                "success": True,
+                "message": "조희 성공!",
+                "data": user_detail_json
+                },
+            ensure_ascii=False
+            )
+            
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+        
+        
 
     elif request.method == "DELETE":
         delete_user = get_object_or_404(User, pk=id)
         delete_user.delete()
-        return JsonResponse({
-                'status': 200,
-                'success': True,
-                'message': '삭제 성공!',
-                'data': None
-            })
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "삭제 성공",
+                "data": None
+            },
+            ensure_ascii=False
+        )
+            
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
 
-    elif request.method == "PUT":
-        body = json.loads(request.body.decode('utf8'))
-        #avatar_img = request.FILES['avatar']
+    elif request.method == "POST":
+        body = request.POST
+        avatar_img = request.FILES['avatar']
         
 
         update_user = get_object_or_404(User, pk =id)
@@ -91,26 +114,34 @@ def read_edit_delete_user(request,id):
         update_user.name = body["name"]
         update_user.birth = body["birth"]
         update_user.bio = body["bio"]
-        #update_user.avatar = avatar_img
+        update_user.avatar = avatar_img
         update_user.nickname = body["nickname"]
 
         update_user.save()
 
         update_user_json={
             "id"    : update_user.id,
-            #"family_id" : new_user.family_id.id,
             "password" : update_user.password,
             "member_id" : update_user.member_id,
             "name"    : update_user.name,
             "birth"    : update_user.birth,
             "bio"    : update_user.bio,
-            #"avatar"    : update_user.avatar.url,
+            "avatar"    : update_user.avatar.url,
             "nickname"    : update_user.nickname,
         }
 
-        return JsonResponse({
-                'status': 200,
-                'success': True,
-                'message': '업데이트 성공!',
-                'data': update_user_json
-            })
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "수정 성공",
+                "data": update_user_json
+            },
+            ensure_ascii=False
+        )
+            
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
