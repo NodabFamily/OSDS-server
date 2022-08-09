@@ -19,13 +19,12 @@ def create_read_all_album(request, family_id):
     if request.method == "POST":
 
         body = request.POST
-        img = request.FILES.get('cover_image')
-        album_img = request.FILES.getlist['album_image']
+        album_img = request.POST['album_image']
 
         new_album = Album.objects.create(
             family_id=get_object_or_404(Family, pk=family_id),
             title=body["title"],
-            cover_image=img
+            cover_image=body["cover_image"]
         )
 
         for image in album_img:
@@ -41,7 +40,7 @@ def create_read_all_album(request, family_id):
             "id": new_album.id,
             "title": new_album.title,
             "family_id": new_album.family_id.id,
-            "album_image": new_album.album_image.url,
+            "album_image": new_album.album_image,
             "created_at": new_album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
             "updated_at": new_album.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
 
@@ -79,13 +78,12 @@ def create_read_all_album(request, family_id):
             for photo in photo_all:
                 like_count += photo.like_count
                 comment_count += photo.comment_set.all().count()
-                my_like = photo.my_likes
 
             album_json = {
                 "id" : album.id,
                 "family_id" : user,
                 "title" : album.title,
-                "album_image" : album.album_image.url,
+                "album_image" : album.album_image,
                 "like_count" : like_count,
                 "comment_count" : comment_count,
                 "created_at" : album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
