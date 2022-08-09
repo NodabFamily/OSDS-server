@@ -40,7 +40,7 @@ def create_read_all_album(request, family_id):
             "id": new_album.id,
             "title": new_album.title,
             "family_id": new_album.family_id.id,
-            "album_image": new_album.album_image,
+            "cover_image": new_album.cover_image,
             "created_at": new_album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
             "updated_at": new_album.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
 
