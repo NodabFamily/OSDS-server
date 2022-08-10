@@ -12,7 +12,6 @@ from .models import Family
 @require_http_methods(['POST'])
 def create_family(request):
     if request.method == "POST":
-        image = request.FILES.get("cover_image")
         body = request.POST
 
         sender = request.user
@@ -25,7 +24,7 @@ def create_family(request):
 
         new_family = Family.objects.create(
             family_name = body['family_name'],
-            cover_image = image,
+            cover_image = body['cover_image'],
             bio = body['bio'],
             password = decoded_password
         )
@@ -37,7 +36,7 @@ def create_family(request):
         new_family_json = {
             "id" : new_family.id,
             "family_name" : new_family.family_name,
-            "cover_image" : new_family.cover_image.url,
+            "cover_image" : new_family.cover_image,
             "bio" : new_family.bio,
             "password" : new_family.password,
             "created_at" : new_family.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
@@ -79,11 +78,10 @@ def check_validate_family(request,family_id):
 
         family_json = {
             "family_name" : family.family_name,
-            "cover_image" : family.cover_image.url,
+            "cover_image" : family.cover_image,
             "bio" : family.bio,
             "members" : member_json_all
         }
-        
         json_res = json.dumps(
             {
                 "status": 200,
@@ -150,7 +148,7 @@ def check_validate_family(request,family_id):
             )
 
 
-@require_http_methods(['GET','POST','DELETE'])
+@require_http_methods(['GET','PUT','DELETE'])
 def read_update_delete_family(request,family_id):
     # 가족 정보 조회
     if request.method == 'GET':
@@ -168,7 +166,7 @@ def read_update_delete_family(request,family_id):
 
         family_json = {
             "family_name" : family.family_name,
-            "cover_image" : family.cover_image.url,
+            "cover_image" : family.cover_image,
             "bio"         : family.bio,
             "members"     : member_json_all
         }
@@ -190,9 +188,8 @@ def read_update_delete_family(request,family_id):
         )
     
     # 가족 정보 수정
-    elif request.method == 'POST':
-        body = request.POST
-        image = request.FILES["cover_image"]
+    elif request.method == 'PUT':
+        body = json.loads(request.body.decode('UTF-8'))
 
         password = body['password']
         hashed_password = bcrypt.hashpw(
@@ -202,14 +199,14 @@ def read_update_delete_family(request,family_id):
 
         update_family = get_object_or_404(Family, pk=family_id)
         update_family.family_name = body['family_name']
-        update_family.cover_image = image
+        update_family.cover_image = body['cover_image']
         update_family.bio = body['bio']
         update_family.password = decoded_password
         update_family.save()
 
         update_family_json = {
             "family_name" : update_family.family_name,
-            "cover_image" : update_family.cover_image.url,
+            "cover_image" : update_family.cover_image,
             "bio"         : update_family.bio,
             "password"    : update_family.password
         }
@@ -244,7 +241,7 @@ def read_update_delete_family(request,family_id):
             },
             ensure_ascii=False
         )
-            
+        
         return HttpResponse(
             json_res,
             content_type=u"application/json; charset=utf-8",
