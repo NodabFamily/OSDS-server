@@ -20,8 +20,9 @@ def create_read_all_album(request, family_id):
 
         body = request.POST
         album_img = request.POST['album_image']
-
+        user = request.user.id
         new_album = Album.objects.create(
+            user_id=user,
             family_id=get_object_or_404(Family, pk=family_id),
             title=body["title"],
             cover_image=body["cover_image"]
@@ -29,6 +30,7 @@ def create_read_all_album(request, family_id):
 
         for image in album_img:
             photo = Photo.objects.create(
+                user_id=user,
                 album_id=new_album.id,
                 family_id=family_id.id,
                 photo_image=image
@@ -39,11 +41,11 @@ def create_read_all_album(request, family_id):
         new_album_json = {
             "id": new_album.id,
             "title": new_album.title,
+            "user_id": new_album.user_id,
             "family_id": new_album.family_id.id,
             "cover_image": new_album.cover_image,
             "created_at": new_album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
-            "updated_at": new_album.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
-
+            "updated_at": new_album.updated_at.strftime("%m/%d/%Y, %H:%M:%S")
         }
         json_res = json.dumps(
             {
@@ -83,6 +85,7 @@ def create_read_all_album(request, family_id):
                 "id" : album.id,
                 "family_id" : user,
                 "title" : album.title,
+                "user_id" : album.user_id,
                 "album_image" : album.album_image,
                 "like_count" : like_count,
                 "comment_count" : comment_count,
@@ -131,6 +134,7 @@ def read_edit_delete_album(request, family_id, album_id):
                 "id" : photo.id,
                 "album_id" : photo.album_id.id,
                 "family_id" : photo.family_id.id,
+                "user_id" : photo.user_id,
                 "photo_image" : photo.photo_image.url,
                 "like_count" : like_count,
                 "comment_count" : comment_count,
