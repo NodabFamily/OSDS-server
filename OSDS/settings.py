@@ -65,6 +65,7 @@ PROJECTS_APPS = [
 
 THIRD_PARTY_APPS = [
      "debug_toolbar",
+     "corsheaders",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECTS_APPS + THIRD_PARTY_APPS
@@ -74,7 +75,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -160,4 +161,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 INTERNAL_IPS = [
     '127.0.0.1',
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ORIGIN_WHITELIST = [ 
+    "https://mrmr-test.netlify.app/",
+    "https://mrmr-likelion.netlify.app",
+    "https://mrmr-develop.netlify.app",
+    "http://localhost:3000/",
 ]
