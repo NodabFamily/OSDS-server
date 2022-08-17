@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from accounts.models import User
 from families.models import Family
 from .models import Like
+from .models.bookmark import Bookmark
 from .models.comment import Comment
 from .models.photo import Photo
 from .models.album import Album
@@ -118,16 +119,22 @@ def read_edit_delete_album(request, family_id, album_id):
         photo_json_all = []
         user_id = request.user.id
         print("user_id:", user_id)
-        photo_all = Photo.objects.filter(album_id=album_id).order_by("-id").prefetch_related(Prefetch("like_set", queryset=Like.objects.filter(user_id=user_id), to_attr="my_likes"))
+        photo_all = Photo.objects.filter(album_id=album_id).order_by("-id").prefetch_related(Prefetch("like_set", queryset=Like.objects.filter(user_id=user_id), to_attr="my_likes"), Prefetch("bookmark_set", queryset=Bookmark.objects.filter(user_id=user_id), to_attr="my_bookmarks"))
         for photo in photo_all:
             like_count = photo.like_set.all().count()
             comment_count = photo.comment_set.all().count()
             user_like = photo.my_likes
+            user_bookmark = photo.my_bookmarks
 
             if user_like:
                 my_like=1
             else:
                 my_like=0
+
+            if user_bookmark:
+                my_bookmark=1
+            else:
+                my_bookmark=0
 
             photo_json = {
                 "id" : photo.id,
@@ -138,7 +145,9 @@ def read_edit_delete_album(request, family_id, album_id):
                 "comment_count" : comment_count,
                 "created_at" : photo.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
                 "updated_at" : photo.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
-                "my_like" : my_like
+                "my_like" : my_like,
+                "my_bookmark" : my_bookmark
+
             }
             photo_json_all.append(photo_json)
 
@@ -351,6 +360,58 @@ def do_undo_like(request, family_id, album_id, photo_id):
             photo.save()
             photo_like = Like.objects.filter(user_id=user, photo_id=photo_id)
             photo_like.delete()
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "삭제 성공!"
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+@require_http_methods(['POST', 'DELETE'])
+def do_undo_bookmark(request, family_id, album_id, photo_id):
+    user = request.user.id
+    photo = get_object_or_404(Photo, pk=photo_id)
+
+    if request.method == "POST":
+
+        bookmark_photo = Bookmark.objects.create(user_id=user, photo_id=photo)
+
+        new_bookmark_json = {
+            "user_id": user.id,
+            "photo_id": photo_id,
+            "created_at": bookmark_photo.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
+        }
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "생성 성공!",
+                "data": new_bookmark_json
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+    elif request.method == "DELETE":
+        deleted_cnt = Bookmark.objects.filter(user_id=user, photo_id=photo_id)
+        if deleted_cnt:
+            bookmark_photo = Bookmark.objects.filter(user_id=user, photo_id=photo_id)
+            bookmark_photo.delete()
 
         json_res = json.dumps(
             {

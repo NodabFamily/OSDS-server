@@ -10,5 +10,5 @@ from families.models import Family
 class Photo(BaseModel):
     album_id = models.ForeignKey(Album, on_delete=models.CASCADE, null=True, blank=True)
     family_id = models.ForeignKey(Family, on_delete=models.CASCADE, null=True, blank=True)
-    photo_image = models.ImageField(upload_to="photo/", null=True, blank=True)
+    photo_image = models.URLField()
     like_count = models.IntegerField(default=0)
