@@ -10,3 +10,6 @@ class Album(BaseModel):
     title = models.CharField(max_length=31)
     album_image = models.URLField(max_length=500, blank=True, default='')
 
+    def __str__(self):
+        return self.title
+

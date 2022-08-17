@@ -12,3 +12,4 @@ class Like(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['user_id', 'photo_id'], name='unique_user_photo'),
         ]
+
