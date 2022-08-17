@@ -55,8 +55,8 @@ def login_view(request):
     print("request.user : ", request.user)
     if request.method == 'POST':
         data = json.loads(request.body.decode("utf-8"))
-        username = data.get('username', None)
-        password = data.get('password', None)
+        username = data['username']
+        password = data['password']
 
         user = authenticate(request, username=username , password = password)
 
@@ -76,6 +76,8 @@ def login_view(request):
         else: 
             return JsonResponse({"success": False, "message": "로그인 실패"}, status = 403)
 
+
+@require_http_methods(['POST'])
 def logout_view(request): 
     logout(request)
     return JsonResponse({"success": True, "message": "로그아웃 성공"}, status = 200)
