@@ -3,12 +3,12 @@ from django.db import models
 from accounts.models.user import User
 from archives.models.photo import Photo
 
-class Like(models.Model):
+class Bookmark(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     photo_id = models.ForeignKey(Photo, on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['user_id', 'photo_id'], name='unique_user_photo'),
+            models.UniqueConstraint(fields=['user_id', 'photo_id'], name='unique_user_photo_bookmark'),
         ]
