@@ -65,7 +65,7 @@ PROJECTS_APPS = [
 
 THIRD_PARTY_APPS = [
      "debug_toolbar",
-     "corheaders",
+     "corsheaders",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECTS_APPS + THIRD_PARTY_APPS
