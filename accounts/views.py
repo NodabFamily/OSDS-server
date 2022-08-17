@@ -1,13 +1,9 @@
-from django.shortcuts import render
 import json
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from .models import User
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.models import AnonymousUser
-from django.contrib.auth.signals import user_logged_out
 from django.http import JsonResponse
 # Create your views here.
 @require_http_methods(['POST'])
@@ -60,17 +56,17 @@ def login_view(request):
     print("request.user : ", request.user)
     if request.method == 'POST':
         data = json.loads(request.body.decode("utf-8"))
-        member_id = data.get('member_id', None)
+        username = data.get('username', None)
         password = data.get('password', None)
 
-        user = authenticate(request, username=member_id , password = password)
+        user = authenticate(request, username=username , password = password)
 
         if user is not None:
             login(request, user)
             user_data = {
                 "id"   : user.id,
                 "password" : user.password,
-                "member_id" : user.member_id,
+                "username" : user.username,
                 "name"    : user.name,
                 "birth": user.birth,
                 "bio":user.bio,
@@ -97,7 +93,7 @@ def read_edit_delete_user(request,id):
         user_detail_json={
             "id"   : user_detail.id,
             "password" : user_detail.password,
-            "member_id" : user_detail.member_id,
+            "username" : user_detail.username,
             "name"    : user_detail.name,
             "birth"    : user_detail.birth,
             "bio"    : user_detail.bio,
