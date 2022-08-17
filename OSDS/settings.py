@@ -166,8 +166,8 @@ INTERNAL_IPS = [
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ORIGIN_WHITELIST = [ 
-    "https://mrmr-test.netlify.app/",
+    "https://mrmr-test.netlify.app",
     "https://mrmr-likelion.netlify.app",
     "https://mrmr-develop.netlify.app",
-    "http://localhost:3000/",
+    "http://localhost:3000",
 ]
