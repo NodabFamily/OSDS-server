@@ -8,3 +8,6 @@ class Family(models.Model):
     password = models.CharField(max_length=31, default='', null=True)
     created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.family_name

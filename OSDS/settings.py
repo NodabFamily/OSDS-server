@@ -46,6 +46,7 @@ ALLOWED_HOSTS = [
     "http://www.osds.kro.kr:8000/",
     "43.200.185.157:8000",
     "www.osds.kro.kr:8000/",
+    "www.osds.kro.kr",
 ]
 
 
@@ -77,9 +78,10 @@ INSTALLED_APPS = DJANGO_APPS + PROJECTS_APPS + THIRD_PARTY_APPS
 
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -170,9 +172,12 @@ INTERNAL_IPS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ORIGIN_WHITELIST = [ 
+CORS_ALLOWED_ORIGIN = [ 
     "https://mrmr-test.netlify.app",
     "https://mrmr-likelion.netlify.app",
     "https://mrmr-develop.netlify.app",
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost",
+    "http://127.0.0.1"
 ]
