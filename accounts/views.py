@@ -63,7 +63,7 @@ def login_view(request):
         member_id = data.get('member_id', None)
         password = data.get('password', None)
 
-        user = authenticate(request, member_id= member_id , password = password)
+        user = authenticate(request, username=member_id , password = password)
 
         if user is not None:
             login(request, user)
@@ -74,7 +74,7 @@ def login_view(request):
                 "name"    : user.name,
                 "birth": user.birth,
                 "bio":user.bio,
-                "avatar":user.avatar.url,
+                #"avatar":user.avatar.url,
                 "nickname":user.nickname,
                 "is_participant":user.is_participant,
             }
