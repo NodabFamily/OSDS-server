@@ -47,6 +47,10 @@ ALLOWED_HOSTS = [
     "43.200.185.157:8000",
     "www.osds.kro.kr:8000/",
     "www.osds.kro.kr",
+    'http://localhost:8000/',
+    'http://127.0.0.1:8000',
+    '127.0.0.1',
+    'localhost',
 ]
 
 
