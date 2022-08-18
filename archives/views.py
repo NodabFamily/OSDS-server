@@ -19,21 +19,20 @@ from django.views.decorators.http import require_http_methods
 def create_read_all_album(request, family_id):
     if request.method == "POST":
 
-        body = request.POST
-        album_img = request.POST['album_image']
+        body = json.loads(request.body.decode('utf8'))
+        album_img = body['album_image']
         user = request.user.id
         new_album = Album.objects.create(
             user_id=user,
             family_id=get_object_or_404(Family, pk=family_id),
-            title=body["title"],
-            cover_image=body["cover_image"]
+            title=body.get("title"),
+            cover_image=body.get("cover_image")
         )
-
         for image in album_img:
             photo = Photo.objects.create(
                 user_id=user,
-                album_id=new_album.id,
-                family_id=family_id.id,
+                album_id_id=new_album.id,
+                family_id_id=family_id,
                 photo_image=image
             )
             photo.save()
@@ -68,25 +67,22 @@ def create_read_all_album(request, family_id):
         # 변수 초기화
         like_count = 0
         comment_count = 0
+        user = request.user
 
-        user = request.user.family_id
-        user_id = request.user.id
-
-        album_all = Album.objects.order_by("-id").filter(family_id=user)
+        album_all = Album.objects.order_by("-id").filter(family_id=family_id)
         album_json_all = []
 
         for album in album_all:
             photo_all = Photo.objects.order_by("-id").filter(album_id=album.id)
-
             for photo in photo_all:
                 like_count += photo.like_count
                 comment_count += photo.comment_set.all().count()
 
             album_json = {
                 "id" : album.id,
-                "family_id" : user,
+                "family_id" : family_id,
                 "title" : album.title,
-                "user_id" : album.user_id,
+                "user_id" : album.user_id.id,
                 "album_image" : album.album_image,
                 "like_count" : like_count,
                 "comment_count" : comment_count,
@@ -119,7 +115,6 @@ def read_edit_delete_album(request, family_id, album_id):
     if request.method == "GET":
         photo_json_all = []
         user_id = request.user.id
-        print("user_id:", user_id)
         photo_all = Photo.objects.filter(album_id=album_id).order_by("-id").prefetch_related(Prefetch("like_set", queryset=Like.objects.filter(user_id=user_id), to_attr="my_likes"), Prefetch("bookmark_set", queryset=Bookmark.objects.filter(user_id=user_id), to_attr="my_bookmarks"))
         for photo in photo_all:
             like_count = photo.like_set.all().count()
@@ -142,7 +137,7 @@ def read_edit_delete_album(request, family_id, album_id):
                 "album_id" : photo.album_id.id,
                 "family_id" : photo.family_id.id,
                 "user_id" : photo.user_id,
-                "photo_image" : photo.photo_image.url,
+                "photo_image" : photo.photo_image,
                 "like_count" : like_count,
                 "comment_count" : comment_count,
                 "created_at" : photo.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
@@ -157,7 +152,7 @@ def read_edit_delete_album(request, family_id, album_id):
             {
                 "status": 200,
                 "success": True,
-                "message": "생성 성공!",
+                "message": "조회 성공!",
                 "data": photo_json_all
             },
             ensure_ascii=False
@@ -244,12 +239,12 @@ def create_comment(request, family_id, photo_id):
     if request.method == "POST":
         body = json.loads(request.body.decode('utf8'))
         user = request.user
-        print(user)
         new_comment = Comment.objects.create(
             photo_id=get_object_or_404(Photo, pk=photo_id),
             user_id=user.id,
             comment=body['comment']
         )
+
         new_comment_json = {
             "id": new_comment.id,
             "photo_id": new_comment.photo_id.id,
