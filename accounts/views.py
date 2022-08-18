@@ -94,7 +94,7 @@ def logout_view(request):
         status = 200)
 
 
-@require_http_methods(['GET','DELETE','POST'])
+@require_http_methods(['GET','DELETE','PUT'])
 def read_edit_delete_user(request,id):
     if request.method == "GET":
         user_detail = get_object_or_404(User, pk =id)
@@ -142,8 +142,8 @@ def read_edit_delete_user(request,id):
             status=200
         )
 
-    elif request.method == "POST":
-        body = request.POST
+    elif request.method == "PUT":
+        body = json.loads(request.body.decode('utf-8'))
 
         update_user = get_object_or_404(User, pk =id)
         update_user.username = body["username"]
