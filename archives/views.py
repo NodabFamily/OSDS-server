@@ -89,6 +89,7 @@ def create_read_all_album(request, family_id):
                 "created_at" : album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
                 "updated_at" : album.updated_at.strftime("%m/%d/%Y, %H:%M:%S")
             }
+
             album_json_all.append(album_json)
             like_count = 0
             comment_count = 0
@@ -234,11 +235,11 @@ def delete_photo(request, family_id, album_id, photo_id):
     )
 
 
-@require_http_methods(['POST'])
+@require_http_methods(['POST', 'GET'])
 def create_comment(request, family_id, photo_id):
+    user = request.user
     if request.method == "POST":
         body = json.loads(request.body.decode('utf8'))
-        user = request.user
         new_comment = Comment.objects.create(
             photo_id=get_object_or_404(Photo, pk=photo_id),
             user_id=user.id,
@@ -268,6 +269,36 @@ def create_comment(request, family_id, photo_id):
             content_type=u"application/json; charset=utf-8",
             status=200
         )
+
+    elif request.method == 'GET':
+        comment_all = Comment.objects.filter(photo_id=photo_id)
+        comment_json_all = []
+        for comment in comment_all:
+            comment_json = {
+                "photo_id" : comment.photo_id,
+                "user_id" : comment.user_id,
+                "comment" : comment.comment
+            }
+            comment_json_all.appned(comment_json)
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "조회 성공!",
+                "data": comment_json_all
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+
+
 
 @require_http_methods(['PUT', 'DELETE'])
 def edit_delete_comment(request, family_id, photo_id, comment_id):
