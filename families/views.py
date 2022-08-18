@@ -12,7 +12,7 @@ from .models import Family
 @require_http_methods(['POST'])
 def create_family(request):
     if request.method == "POST":
-        body = request.POST
+        body = json.loads(request.body.decode('utf-8'))
 
         sender = request.user
 
