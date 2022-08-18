@@ -173,7 +173,7 @@ INTERNAL_IPS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGIN = [ 
+CORS_ALLOWED_ORIGINS = [ 
     "https://mrmr-test.netlify.app",
     "https://mrmr-likelion.netlify.app",
     "https://mrmr-develop.netlify.app",
