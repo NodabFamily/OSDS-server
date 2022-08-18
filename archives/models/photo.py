@@ -14,4 +14,3 @@ class Photo(BaseModel):
     family_id = models.ForeignKey(Family, on_delete=models.CASCADE, null=True, blank=True)
     photo_image = models.URLField(max_length=500, blank=True, default='')
     like_count = models.IntegerField(default=0)
-
