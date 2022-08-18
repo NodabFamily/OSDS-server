@@ -6,7 +6,7 @@ from .models import Album,Comment,Like,Photo,Tag,Bookmark
 
 @admin.register(Album)
 class LikeLionModelAdmin(admin.ModelAdmin):
-    list_display = ('id','user_id','family_id','title','album_image',)
+    list_display = ('id','user_id','family_id','title','cover_image',)
     list_editable = ('title',)
 
 @admin.register(Comment)
