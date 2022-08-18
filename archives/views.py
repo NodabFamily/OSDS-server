@@ -115,8 +115,8 @@ def create_read_all_album(request, family_id):
 def read_edit_delete_album(request, family_id, album_id):
     if request.method == "GET":
         photo_json_all = []
-        user_id = request.user.id
-        photo_all = Photo.objects.filter(album_id=album_id).order_by("-id").prefetch_related(Prefetch("like_set", queryset=Like.objects.filter(user_id=user_id), to_attr="my_likes"), Prefetch("bookmark_set", queryset=Bookmark.objects.filter(user_id=user_id), to_attr="my_bookmarks"))
+        user = request.user.id
+        photo_all = Photo.objects.filter(album_id=album_id).order_by("-id").prefetch_related(Prefetch("like_set", queryset=Like.objects.filter(user_id=user), to_attr="my_likes"), Prefetch("bookmark_set", queryset=Bookmark.objects.filter(user_id=user), to_attr="my_bookmarks"))
         for photo in photo_all:
             like_count = photo.like_set.all().count()
             comment_count = photo.comment_set.all().count()
@@ -133,11 +133,13 @@ def read_edit_delete_album(request, family_id, album_id):
             else:
                 my_bookmark=0
 
+            print('my_like:-------------', my_like)
+            print('my_bookmark:-------------', my_bookmark)
             photo_json = {
                 "id" : photo.id,
                 "album_id" : photo.album_id.id,
                 "family_id" : photo.family_id.id,
-                "user_id" : photo.user_id,
+                "user_id" : user,
                 "photo_image" : photo.photo_image,
                 "like_count" : like_count,
                 "comment_count" : comment_count,
@@ -358,7 +360,7 @@ def do_undo_like(request, family_id, album_id, photo_id):
         photo_like = Like.objects.create(user_id=user, photo_id=photo)
 
         new_like_json = {
-            "user_id" : user.id,
+            "user_id" : user,
             "photo_id" : photo_id,
             "created_at" : photo_like.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
         }
@@ -414,7 +416,7 @@ def do_undo_bookmark(request, family_id, album_id, photo_id):
         bookmark_photo = Bookmark.objects.create(user_id=user, photo_id=photo)
 
         new_bookmark_json = {
-            "user_id": user.id,
+            "user_id": user,
             "photo_id": photo_id,
             "created_at": bookmark_photo.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
         }
