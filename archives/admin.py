@@ -18,6 +18,10 @@ class LikeLionModelAdmin(admin.ModelAdmin):
 class LikeLionModelAdmin(admin.ModelAdmin):
     list_display = ('id','user_id','photo_id','created_at',)
 
+@admin.register(Bookmark)
+class LikeLionModelAdmin(admin.ModelAdmin):
+    list_display = ('id','user_id','photo_id','created_at',)
+
 @admin.register(Photo)
 class LikeLionModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'user_id', 'album_id', 'family_id', 'photo_image', 'like_count',)
