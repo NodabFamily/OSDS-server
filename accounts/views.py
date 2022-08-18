@@ -100,7 +100,6 @@ def read_edit_delete_user(request,id):
         user_detail = get_object_or_404(User, pk =id)
         user_detail_json={
             "id"   : user_detail.id,
-            "password" : user_detail.password,
             "username" : user_detail.username,
             "name"    : user_detail.name,
             "birth"    : user_detail.birth,
@@ -148,7 +147,6 @@ def read_edit_delete_user(request,id):
 
         update_user = get_object_or_404(User, pk =id)
         update_user.username = body["username"]
-        update_user.password = body["password"]
         update_user.name = body["name"]
         update_user.birth = body["birth"]
         update_user.bio = body["bio"]
@@ -159,7 +157,6 @@ def read_edit_delete_user(request,id):
 
         update_user_json={
             "id"    : update_user.id,
-            "password" : update_user.password,
             "username" : update_user.username,
             "name"    : update_user.name,
             "birth"    : update_user.birth,
