@@ -118,7 +118,7 @@ def check_validate_family(request,family_id):
                 {
                 "status": 200,
                 "success": True,
-                "message": "생성 성공!",
+                "message": "비밀번호 일치",
                 "data": None
                 },
             ensure_ascii=False
