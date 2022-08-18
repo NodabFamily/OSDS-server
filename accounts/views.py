@@ -1,17 +1,17 @@
 import json
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
-from .models import User
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
+from django.contrib.auth.hashers import make_password
 # Create your views here.
+User = get_user_model()
+
 @require_http_methods(['POST'])
 def create_user(request):
-
-    if request.method == "POST":
-        body = request.POST
-        new_user =  User.objects.create(
+    body = json.loads(request.body.decode('utf-8'))
+    new_user =  User.objects.create(
             username = body["username"],
             password = body["password"],
             name = body["name"],
@@ -21,10 +21,11 @@ def create_user(request):
             avatar = body["avatar"],
             nickname = body["nickname"]   
         )
+    new_user.password = make_password(body["password"])
+    new_user.save()
 
-        new_user_json={
+    new_user_json={
             "id"    : new_user.id,
-            "password" : new_user.password,
             "username" : new_user.username,
             "name"    : new_user.name,
             "birth"    : new_user.birth,
@@ -32,10 +33,11 @@ def create_user(request):
             "avatar"    : new_user.avatar,
             "nickname"    : new_user.nickname,
             "is_participant"    : new_user.is_participant
-
         }
 
-        json_res=json.dumps(
+    
+
+    json_res=json.dumps(
                 {
                 'status': 200,
                 'success': True,
@@ -44,7 +46,7 @@ def create_user(request):
                 },
             ensure_ascii=False
             )
-        return HttpResponse(
+    return HttpResponse(
             json_res,
             content_type=u"application/json; charset=utf-8",
             status=200
@@ -53,18 +55,22 @@ def create_user(request):
 @require_http_methods(['POST'])
 def login_view(request):
     print("request.user : ", request.user)
-    if request.method == 'POST':
-        data = json.loads(request.body.decode("utf-8"))
-        username = data['username']
-        password = data['password']
+    print("request.POST : ", request.POST.get("username"))
+    print("request.body : ", request.body)
+    data = json.loads(request.body.decode("utf-8"))
+    print("data : ", data)             
 
-        user = authenticate(request, username=username , password = password)
+    username = data['username']
+    password = data['password']
 
-        if user is not None:
-            login(request, user)
-            user_data = {
+    print(username)
+    print(password)
+    user = authenticate(request, username=username , password = password)
+
+    if user is not None:
+        login(request, user)
+        user_data = {
                 "id"   : user.id,
-                "password" : user.password,
                 "username" : user.username,
                 "name"    : user.name,
                 "birth": user.birth,
@@ -72,18 +78,20 @@ def login_view(request):
                 "nickname":user.nickname,
                 "is_participant":user.is_participant
             }
-            return JsonResponse({"success": True, "message" : "로그인 성공", "data" : user_data}, status = 200)
-        else: 
-            return JsonResponse({"success": False, "message": "로그인 실패"}, status = 403)
+        return JsonResponse({"success": True, "message" : "로그인 성공", "data" : user_data}, status = 200)
+    else: 
+        return JsonResponse({"success": False, "message": "로그인 실패"}, status = 403)
+   
 
 
 @require_http_methods(['POST'])
 def logout_view(request): 
     logout(request)
-    return JsonResponse({"success": True, "message": "로그아웃 성공"}, status = 200)
 
-
-
+    return JsonResponse({
+        "success": True,
+        "message": "로그아웃 성공"},
+        status = 200)
 
 
 @require_http_methods(['GET','DELETE','POST'])
@@ -176,6 +184,3 @@ def read_edit_delete_user(request,id):
             status=200
         ) 
         
-        
-
-# Create your views here.
