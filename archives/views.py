@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 
 from accounts.models import User
 from families.models import Family
-from .models import Like
+from .models import Like, Tag
 from .models.bookmark import Bookmark
 from .models.comment import Comment
 from .models.photo import Photo
@@ -23,14 +23,14 @@ def create_read_all_album(request, family_id):
         album_img = body['album_image']
         user = request.user.id
         new_album = Album.objects.create(
-            user_id=user,
+            user_id_id=user,
             family_id=get_object_or_404(Family, pk=family_id),
             title=body.get("title"),
             cover_image=body.get("cover_image")
         )
         for image in album_img:
             photo = Photo.objects.create(
-                user_id=user,
+                user_id_id=user,
                 album_id_id=new_album.id,
                 family_id_id=family_id,
                 photo_image=image
@@ -41,7 +41,7 @@ def create_read_all_album(request, family_id):
         new_album_json = {
             "id": new_album.id,
             "title": new_album.title,
-            "user_id": new_album.user_id,
+            "user_id": new_album.user_id.id,
             "family_id": new_album.family_id.id,
             "cover_image": new_album.cover_image,
             "created_at": new_album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
@@ -67,25 +67,31 @@ def create_read_all_album(request, family_id):
         # 변수 초기화
         like_count = 0
         comment_count = 0
-        user = request.user
+        # user = request.user.id
 
         album_all = Album.objects.order_by("-id").filter(family_id=family_id)
         album_json_all = []
-
+        tag_json_all = []
         for album in album_all:
             photo_all = Photo.objects.order_by("-id").filter(album_id=album.id)
+            for tag in album.tag_set.all():
+                tag_json = {
+                    "tag_set" : tag.content
+                }
+                tag_json_all.append(tag_json)
+
             for photo in photo_all:
                 like_count += photo.like_count
                 comment_count += photo.comment_set.all().count()
-
             album_json = {
                 "id" : album.id,
                 "family_id" : family_id,
                 "title" : album.title,
                 "user_id" : album.user_id.id,
-                "album_image" : album.album_image,
+                "album_image" : album.cover_image,
                 "like_count" : like_count,
                 "comment_count" : comment_count,
+                "tag_set_all" : tag_json_all,
                 "created_at" : album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
                 "updated_at" : album.updated_at.strftime("%m/%d/%Y, %H:%M:%S")
             }
@@ -98,7 +104,7 @@ def create_read_all_album(request, family_id):
             {
                 "status": 200,
                 "success": True,
-                "message": "생성 성공!",
+                "message": "조회 성공!",
                 "data": album_json_all
             },
             ensure_ascii=False
@@ -115,8 +121,8 @@ def create_read_all_album(request, family_id):
 def read_edit_delete_album(request, family_id, album_id):
     if request.method == "GET":
         photo_json_all = []
-        user_id = request.user.id
-        photo_all = Photo.objects.filter(album_id=album_id).order_by("-id").prefetch_related(Prefetch("like_set", queryset=Like.objects.filter(user_id=user_id), to_attr="my_likes"), Prefetch("bookmark_set", queryset=Bookmark.objects.filter(user_id=user_id), to_attr="my_bookmarks"))
+        user = request.user.id
+        photo_all = Photo.objects.filter(album_id=album_id).order_by("-id").prefetch_related(Prefetch("like_set", queryset=Like.objects.filter(user_id=user), to_attr="my_likes"), Prefetch("bookmark_set", queryset=Bookmark.objects.filter(user_id=user), to_attr="my_bookmarks"))
         for photo in photo_all:
             like_count = photo.like_set.all().count()
             comment_count = photo.comment_set.all().count()
@@ -137,7 +143,7 @@ def read_edit_delete_album(request, family_id, album_id):
                 "id" : photo.id,
                 "album_id" : photo.album_id.id,
                 "family_id" : photo.family_id.id,
-                "user_id" : photo.user_id,
+                "user_id" : user,
                 "photo_image" : photo.photo_image,
                 "like_count" : like_count,
                 "comment_count" : comment_count,
@@ -235,21 +241,80 @@ def delete_photo(request, family_id, album_id, photo_id):
     )
 
 
+@require_http_methods(['GET'])
+def read_family_photo(request, family_id):
+    if request.method == "GET":
+        user = request.user.id
+        photo_all = Photo.objects.filter(family_id=family_id).order_by("-id").prefetch_related(
+            Prefetch("like_set", queryset=Like.objects.filter(user_id=user), to_attr="my_likes"),
+            Prefetch("bookmark_set", queryset=Bookmark.objects.filter(user_id=user), to_attr="my_bookmarks"))
+        photo_json_all = []
+
+        for photo in photo_all :
+            like_count = photo.like_set.all().count()
+            comment_count = photo.comment_set.all().count()
+            user_like = photo.my_likes
+            user_bookmark = photo.my_bookmarks
+
+            if user_like:
+                my_like = 1
+            else:
+                my_like = 0
+
+            if user_bookmark:
+                my_bookmark = 1
+            else:
+                my_bookmark = 0
+
+            photo_json = {
+                "id": photo.id,
+                "album_id": photo.album_id.id,
+                "family_id": photo.family_id.id,
+                "user_id": user,
+                "photo_image": photo.photo_image,
+                "like_count": like_count,
+                "comment_count": comment_count,
+                "created_at": photo.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
+                "updated_at": photo.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
+                "my_like": my_like,
+                "my_bookmark": my_bookmark
+            }
+
+            photo_json_all.append(photo_json)
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "조회 성공!",
+                "data": photo_json_all
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+
+
 @require_http_methods(['POST', 'GET'])
 def create_comment(request, family_id, photo_id):
-    user = request.user
+    user = request.user.id
     if request.method == "POST":
         body = json.loads(request.body.decode('utf8'))
         new_comment = Comment.objects.create(
-            photo_id=get_object_or_404(Photo, pk=photo_id),
-            user_id=user.id,
-            comment=body['comment']
+            photo_id = get_object_or_404(Photo, pk=photo_id),
+            user_id_id = user,
+            comment = body['comment']
         )
 
         new_comment_json = {
             "id": new_comment.id,
             "photo_id": new_comment.photo_id.id,
-            "user_id": new_comment.user_id,
+            "user_id": new_comment.user_id.id,
             "comment": new_comment.comment,
             "created_at": new_comment.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
             "updated_at": new_comment.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
@@ -275,11 +340,11 @@ def create_comment(request, family_id, photo_id):
         comment_json_all = []
         for comment in comment_all:
             comment_json = {
-                "photo_id" : comment.photo_id,
-                "user_id" : comment.user_id,
+                "photo_id" : comment.photo_id.id,
+                "user_id" : comment.user_id.id,
                 "comment" : comment.comment
             }
-            comment_json_all.appned(comment_json)
+            comment_json_all.append(comment_json)
 
         json_res = json.dumps(
             {
@@ -355,10 +420,10 @@ def do_undo_like(request, family_id, album_id, photo_id):
 
         photo.like_count += 1
         photo.save()
-        photo_like = Like.objects.create(user_id=user, photo_id=photo)
+        photo_like = Like.objects.create(user_id_id=user, photo_id=photo)
 
         new_like_json = {
-            "user_id" : user.id,
+            "user_id" : user,
             "photo_id" : photo_id,
             "created_at" : photo_like.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
         }
@@ -407,14 +472,13 @@ def do_undo_like(request, family_id, album_id, photo_id):
 @require_http_methods(['POST', 'DELETE'])
 def do_undo_bookmark(request, family_id, album_id, photo_id):
     user = request.user.id
-    photo = get_object_or_404(Photo, pk=photo_id)
 
     if request.method == "POST":
 
-        bookmark_photo = Bookmark.objects.create(user_id=user, photo_id=photo)
+        bookmark_photo = Bookmark.objects.create(user_id_id=user, photo_id_id=photo_id)
 
         new_bookmark_json = {
-            "user_id": user.id,
+            "user_id": user,
             "photo_id": photo_id,
             "created_at": bookmark_photo.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
         }
@@ -455,3 +519,126 @@ def do_undo_bookmark(request, family_id, album_id, photo_id):
             content_type=u"application/json; charset=utf-8",
             status=200
         )
+
+@require_http_methods(['GET'])
+def read_bookmark(request, family_id, user_id):
+    photo_json_all = []
+    if request.method == "GET":
+        my_bookmarks = Bookmark.objects.filter(user_id=user_id)
+        for bookmark in my_bookmarks:
+            photo_id = bookmark.photo_id.id
+            photo_query = Photo.objects.filter(pk=photo_id).prefetch_related(Prefetch("like_set", queryset=Like.objects.filter(user_id=user_id), to_attr="my_likes"),Prefetch("bookmark_set", queryset=Bookmark.objects.filter(user_id=user_id), to_attr="my_bookmarks"))
+
+            for photo in photo_query:
+                like_count = photo.like_set.all().count()
+                comment_count = photo.comment_set.all().count()
+                user_like = photo.my_likes
+                user_bookmark = photo.my_bookmarks
+
+                if user_like:
+                    my_like = 1
+                else:
+                    my_like = 0
+
+                if user_bookmark:
+                    my_bookmark = 1
+                else:
+                    my_bookmark = 0
+
+                photo_json = {
+                    "id": photo.id,
+                    "album_id": photo.album_id.id,
+                    "family_id": photo.family_id.id,
+                    "user_id": user_id,
+                    "photo_image": photo.photo_image,
+                    "like_count": like_count,
+                    "comment_count": comment_count,
+                    "created_at": photo.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
+                    "updated_at": photo.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
+                    "my_like": my_like,
+                    "my_bookmark": my_bookmark
+                }
+
+                photo_json_all.append(photo_json)
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "조회 성공!",
+                "data": photo_json_all
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+
+
+
+
+@require_http_methods(['POST', 'GET'])
+def create_tag(request, family_id, album_id):
+    if request.method == "POST":
+        body = json.loads(request.body.decode('utf8'))
+        tag_list = body['tag_list']
+        new_tag_json_all = []
+        for tag in tag_list:
+            new_tag = Tag.objects.create(
+                album_id_id=album_id,
+                family_id_id=family_id,
+                content=tag
+            )
+            new_tag.save()
+
+            new_tag_json = {
+                "id" : new_tag.id,
+                "album_id" : new_tag.album_id.id,
+                "family_id" : new_tag.family_id.id,
+                "content" : new_tag.content
+            }
+            new_tag_json_all.append(new_tag_json)
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "생성 성공!",
+                "data": new_tag_json_all
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+    elif request.method == "GET":
+        tag_all = Tag.objects.filter(album_id=album_id)
+        tag_json_all = []
+
+        for tag in tag_all:
+            content= tag.content
+            tag_json_all.append(content)
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "조회 성공!",
+                "data": tag_json_all
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+

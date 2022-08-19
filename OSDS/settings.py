@@ -40,14 +40,17 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "http://43.200.185.157:8000",
-    "http://www.osds.kro.kr:8000/",
+    "https://43.200.185.157:8000",
+    "http://www.osds.kro.kr:8000",
+    "https://www.osds.kro.kr:8000",
     "43.200.185.157:8000",
-    "www.osds.kro.kr:8000/",
+    "www.osds.kro.kr:8000",
     "www.osds.kro.kr",
     'http://localhost:8000/',
     'http://127.0.0.1:8000',
     '127.0.0.1',
     'localhost',
+    ".cloudtype.app",
 ]
 
 
@@ -182,3 +185,5 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost",
     "http://127.0.0.1"
 ]
+
+CSRF_TRUSTED_ORIGINS = ['https://*.cloudtype.app']
