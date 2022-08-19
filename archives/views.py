@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 
 from accounts.models import User
 from families.models import Family
-from .models import Like
+from .models import Like, Tag
 from .models.bookmark import Bookmark
 from .models.comment import Comment
 from .models.photo import Photo
@@ -454,3 +454,65 @@ def do_undo_bookmark(request, family_id, album_id, photo_id):
             content_type=u"application/json; charset=utf-8",
             status=200
         )
+
+@require_http_methods(['POST', 'GET'])
+def create_tag(request, family_id, album_id):
+    if request.method == "POST":
+        body = json.loads(request.body.decode('utf8'))
+        tag_list = body['tag_list']
+        new_tag_json_all = []
+        for tag in tag_list:
+            new_tag = Tag.objects.create(
+                album_id_id=album_id,
+                family_id_id=family_id,
+                content=tag
+            )
+            new_tag.save()
+
+            new_tag_json = {
+                "id" : new_tag.id,
+                "album_id" : new_tag.album_id.id,
+                "family_id" : new_tag.family_id.id,
+                "content" : new_tag.content
+            }
+            new_tag_json_all.append(new_tag_json)
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "생성 성공!",
+                "data": new_tag_json_all
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+    elif request.method == "GET":
+        tag_all = Tag.objects.filter(album_id=album_id)
+        tag_json_all = []
+
+        for tag in tag_all:
+            content= tag.content
+            tag_json_all.append(content)
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "조회 성공!",
+                "data": tag_json_all
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
