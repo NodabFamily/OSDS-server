@@ -50,6 +50,7 @@ ALLOWED_HOSTS = [
     'http://127.0.0.1:8000',
     '127.0.0.1',
     'localhost',
+    ".cloudtype.app",
 ]
 
 
@@ -184,3 +185,5 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost",
     "http://127.0.0.1"
 ]
+
+CSRF_TRUSTED_ORIGINS = ['https://*.cloudtype.app']
