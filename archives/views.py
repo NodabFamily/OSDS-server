@@ -514,6 +514,67 @@ def do_undo_bookmark(request, family_id, album_id, photo_id):
             status=200
         )
 
+@require_http_methods(['GET'])
+def read_bookmark(request, family_id, user_id):
+    photo_json_all = []
+    if request.method == "GET":
+        my_bookmarks = Bookmark.objects.filter(user_id=user_id)
+        for bookmark in my_bookmarks:
+            photo_id = bookmark.photo_id.id
+            photo_query = Photo.objects.filter(pk=photo_id).prefetch_related(Prefetch("like_set", queryset=Like.objects.filter(user_id=user_id), to_attr="my_likes"),Prefetch("bookmark_set", queryset=Bookmark.objects.filter(user_id=user_id), to_attr="my_bookmarks"))
+
+            for photo in photo_query:
+                like_count = photo.like_set.all().count()
+                comment_count = photo.comment_set.all().count()
+                user_like = photo.my_likes
+                user_bookmark = photo.my_bookmarks
+
+                if user_like:
+                    my_like = 1
+                else:
+                    my_like = 0
+
+                if user_bookmark:
+                    my_bookmark = 1
+                else:
+                    my_bookmark = 0
+
+                photo_json = {
+                    "id": photo.id,
+                    "album_id": photo.album_id.id,
+                    "family_id": photo.family_id.id,
+                    "user_id": user_id,
+                    "photo_image": photo.photo_image,
+                    "like_count": like_count,
+                    "comment_count": comment_count,
+                    "created_at": photo.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
+                    "updated_at": photo.updated_at.strftime("%m/%d/%Y, %H:%M:%S"),
+                    "my_like": my_like,
+                    "my_bookmark": my_bookmark
+                }
+
+                photo_json_all.append(photo_json)
+
+        json_res = json.dumps(
+            {
+                "status": 200,
+                "success": True,
+                "message": "조회 성공!",
+                "data": photo_json_all
+            },
+            ensure_ascii=False
+        )
+
+        return HttpResponse(
+            json_res,
+            content_type=u"application/json; charset=utf-8",
+            status=200
+        )
+
+
+
+
+
 @require_http_methods(['POST', 'GET'])
 def create_tag(request, family_id, album_id):
     if request.method == "POST":
