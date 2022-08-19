@@ -71,13 +71,18 @@ def create_read_all_album(request, family_id):
 
         album_all = Album.objects.order_by("-id").filter(family_id=family_id)
         album_json_all = []
-
+        tag_json_all = []
         for album in album_all:
             photo_all = Photo.objects.order_by("-id").filter(album_id=album.id)
+            for tag in album.tag_set.all():
+                tag_json = {
+                    "tag_set" : tag.content
+                }
+                tag_json_all.append(tag_json)
+
             for photo in photo_all:
                 like_count += photo.like_count
                 comment_count += photo.comment_set.all().count()
-
             album_json = {
                 "id" : album.id,
                 "family_id" : family_id,
@@ -86,6 +91,7 @@ def create_read_all_album(request, family_id):
                 "album_image" : album.cover_image,
                 "like_count" : like_count,
                 "comment_count" : comment_count,
+                "tag_set_all" : tag_json_all,
                 "created_at" : album.created_at.strftime("%m/%d/%Y, %H:%M:%S"),
                 "updated_at" : album.updated_at.strftime("%m/%d/%Y, %H:%M:%S")
             }

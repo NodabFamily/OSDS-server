@@ -28,5 +28,5 @@ class LikeLionModelAdmin(admin.ModelAdmin):
 
 @admin.register(Tag)
 class LikeLionModelAdmin(admin.ModelAdmin):
-    list_display = ('id', 'album_id', 'family_id', 'content',)
+    list_display = ('id','family_id', 'content',)
     list_editable = ('content',)
