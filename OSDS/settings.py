@@ -185,5 +185,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost",
     "http://127.0.0.1"
 ]
-
-CSRF_TRUSTED_ORIGINS = ['https://*.cloudtype.app']
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.cloudtype.app',
+    'https://*.osds.kro.kr',
+    "http://*.osds.kro.kr",
+    ]
