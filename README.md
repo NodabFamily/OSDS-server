@@ -1,6 +1,6 @@
 # OSDS-server
 
-<img src="./static/img/morakmorak.png">
+<img src="./static/img/morakmorak.png" width="300"  height="300" />
 
 <br/>
 
